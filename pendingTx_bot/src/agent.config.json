@@ -1,0 +1,17 @@
+{
+    "filters": 
+    [ 
+        { 
+            "from": null,
+            "to": "0xdAC17F958D2ee523a2206206994597C13D831ec7", 
+            "value": null,
+            "signature": "transfer(address,uint256)"
+            
+        }
+    ],
+
+    "providerUrl": "wss://mainnet.infura.io/ws/v3/API-KEY",
+    "threshold": 10000,
+    "decimals": 6
+
+}
