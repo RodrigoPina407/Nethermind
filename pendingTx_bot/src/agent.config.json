@@ -10,8 +10,10 @@
         }
     ],
 
-    "providerUrl": "wss://mainnet.infura.io/ws/v3/API-KEY",
+    "provider": null,
+    "providerUrl": "wss://mainnet.infura.io/ws/v3/450d5f4069354fe9b1874a2784a31042",
     "threshold": 10000,
-    "decimals": 6
+    "decimals": 6,
+    "abi": ["address","uint256"]
 
 }

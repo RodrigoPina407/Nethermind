@@ -1,8 +1,6 @@
-const { Finding, FindingSeverity, FindingType, getJsonRpcUrl, ethers } = require("forta-agent");
+const { Finding, FindingSeverity, FindingType, getJsonRpcUrl, ethers} = require("forta-agent");
 const config = require("./agent.config.json");
 
-
-const TETHER_DECIMALS = 6;
 let findingsCount = 0;
 let teste;
 
@@ -12,7 +10,7 @@ function getSelector(sig)
 {
     let selector = ethers.utils.id(sig);
 
-    return selector.slice(0, 5*2);
+    return ethers.utils.hexDataSlice(selector, 0, 4);
 }
 
 function filter(_tx)
@@ -41,7 +39,7 @@ function filter(_tx)
                         isValidTx = false;
                     break;
                 case "signature":
-                    if(filter[key] !== null && getSelector(filter[key]) !== _tx.data.slice(0, 10))
+                    if(filter[key] !== null && getSelector(filter[key]) !== ethers.utils.hexDataSlice(_tx.data,0,4))
                         isValidTx = false;
                     break;
 
@@ -67,18 +65,21 @@ const initialize = async function (){
   config.provider.on("pending", async (txHash) => {
 
       let tx = await config.provider.getTransaction(txHash);
+      
 
       if(tx !== null)
         if(filter(tx))
         {
-          let normalizedValue = parseInt(tx.data.slice(37*2), 16)/(10 ** config.decimals);
+          let [address, value] = ethers.utils.defaultAbiCoder.decode(config.abi, ethers.utils.hexDataSlice(tx.data,4));
+
+          let normalizedValue = value.div(ethers.BigNumber.from((10 ** config.decimals)));
+          teste = normalizedValue;
           pendingTx.push(
             {
               from: tx.from,
-              to: tx.to,
-              value: tx.value,
-              amount: normalizedValue,
-              hash: tx.hash
+              to: address,
+              amount: normalizedValue.toNumber(),
+              hash: tx.hash      
             }
           );
           findingsCount ++;
@@ -112,7 +113,7 @@ const handleBlock = async (blockEvent) => {
 
   while(pendingTx.length)
   {
-    let tx = pendingTx[pendingTx.length -1];
+    let tx = pendingTx[pendingTx.length -1];    
     
     //push pending transactions where the amount transfer exceeds the threshold
     if(tx.amount >= config.threshold)  
