@@ -2,7 +2,7 @@ const { Finding, FindingSeverity, FindingType, getJsonRpcUrl, ethers} = require(
 const config = require("./agent.config.json");
 
 let findingsCount = 0;
-let teste;
+
 
 const pendingTx = [];
 
@@ -59,21 +59,22 @@ const initialize = async function (){
 
   if(!config.provider)
   {
-    config.provider = new ethers.providers.WebSocketProvider(config.providerUrl);
+    config.provider = new ethers.providers.JsonRpcProvider(getJsonRpcUrl());
   }
 
   config.provider.on("pending", async (txHash) => {
 
-      let tx = await config.provider.getTransaction(txHash);
-      
+      let tx = await config.provider.getTransaction(txHash); 
 
       if(tx !== null)
         if(filter(tx))
         {
+
           let [address, value] = ethers.utils.defaultAbiCoder.decode(config.abi, ethers.utils.hexDataSlice(tx.data,4));
 
+
           let normalizedValue = value.div(ethers.BigNumber.from((10 ** config.decimals)));
-          teste = normalizedValue;
+
           pendingTx.push(
             {
               from: tx.from,
@@ -82,10 +83,12 @@ const initialize = async function (){
               hash: tx.hash      
             }
           );
+
           findingsCount ++;
         }
 
   });
+
 }
 
 
@@ -110,9 +113,10 @@ function createAlert(_tx){
 
 const handleBlock = async (blockEvent) => {
   const findings = [];
-
+  
   while(pendingTx.length)
   {
+    
     let tx = pendingTx[pendingTx.length -1];    
     
     //push pending transactions where the amount transfer exceeds the threshold

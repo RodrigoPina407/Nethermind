@@ -11,8 +11,8 @@
     ],
 
     "provider": null,
-    "providerUrl": "wss://mainnet.infura.io/ws/v3/450d5f4069354fe9b1874a2784a31042",
-    "threshold": 10000,
+    "providerUrl":"https://eth-mainnet.alchemyapi.io/v2/5C8r78fTiSnrk4he9y9eUP8QBvaXBgJV",
+    "threshold": 100,
     "decimals": 6,
     "abi": ["address","uint256"]
 
