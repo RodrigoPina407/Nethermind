@@ -18,12 +18,11 @@ import {
 } from "./agent.config"
 
 let findingsCount = 0;
+let provider:ethers.providers.JsonRpcProvider;
 
 const initialize = async () => {
 
-  let provider = getEthersProvider();
-
-
+  provider = new ethers.providers.JsonRpcProvider(getJsonRpcUrl());
 
 }
 
@@ -33,12 +32,11 @@ const isFromUniswap = async (address: string) => {
 
   try{
 
-    const provider = new ethers.providers.JsonRpcProvider(getJsonRpcUrl());
-
     const contractIface = new ethers.Contract(address, ABI, provider);
 
     let factory = await contractIface.factory();
 
+    //check if the result form factory() is equal to the address of UniswapV3Factory contract
     if(factory === FACTORY_ADDRESS)
       isUniswap = true;
 
@@ -57,18 +55,19 @@ const handleTransaction: HandleTransaction = async (
   const findings: Finding[] = [];
 
   // filter the transaction logs for Tether transfer events
-  const swapEvents = txEvent.filterLog(
-    SWAP_EVENT
-  );
+  const swapEvents = txEvent.filterLog(SWAP_EVENT);
 
-  swapEvents.forEach(async (swapEvent) => {
-    // extract transfer event arguments
-    const { sender, recipient, amount0, amount1 } = swapEvent.args;
+  for(const swapEvent of swapEvents ){
 
-    let valid = await isFromUniswap(swapEvent.address);
+    // extract swap event arguments
+    const {sender, recipient} = swapEvent.args;
+
+    if(findingsCount >= 5) return findings;
     
-    if(valid){
-      findings.push(
+    if(await isFromUniswap(swapEvent.address)){
+      
+      findings.push
+      (
         Finding.fromObject({
           name: "Swap event",
           description: `Swap event from Uniswap on pool: ${swapEvent.address}`,
@@ -77,28 +76,20 @@ const handleTransaction: HandleTransaction = async (
           type: FindingType.Info,
           metadata: {
             sender,
-            recipient,
-            amount0,
-            amount1
+            recipient
           },
         })
       );
-      console.log(findings);
+
       findingsCount++;
     }
       
-  });
+  }
 
   return findings;
 };
 
-// const handleBlock: HandleBlock = async (blockEvent: BlockEvent) => {
-//   const findings: Finding[] = [];
-//   // detect some block condition
-//   return findings;
-// }
-
 export default {
   handleTransaction,
-  // handleBlock
+  initialize
 };
