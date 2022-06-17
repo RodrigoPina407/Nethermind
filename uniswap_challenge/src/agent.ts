@@ -60,7 +60,7 @@ const handleTransaction: HandleTransaction = async (
   for(const swapEvent of swapEvents ){
 
     // extract swap event arguments
-    const {sender, recipient} = swapEvent.args;
+    const {sender, recipient, amount0, amount1} = swapEvent.args;
 
     if(findingsCount >= 5) return findings;
     
@@ -74,9 +74,12 @@ const handleTransaction: HandleTransaction = async (
           alertId: "FORTA-1",
           severity: FindingSeverity.Low,
           type: FindingType.Info,
+          protocol: "UniswapV3",
           metadata: {
             sender,
-            recipient
+            recipient,
+            amount0: amount0.toString(),
+            amount1: amount1.toString()
           },
         })
       );

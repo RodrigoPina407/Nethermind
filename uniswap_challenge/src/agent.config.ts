@@ -5,9 +5,6 @@ export const SWAP_EVENT = "event Swap(address indexed sender, address indexed re
 
 export const ABI =
 [
-    "function swap(address recipient,bool zeroForOne,int256 amountSpecified,uint160 sqrtPriceLimitX96,bytes calldata data)",
-    "function token0() external view returns (address)",
-    "function token1() external view returns (address)",
     "function factory() external view returns (address)"
 ]
 
