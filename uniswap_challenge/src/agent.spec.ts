@@ -1,26 +1,33 @@
-/* import {
+import {
   FindingType,
   FindingSeverity,
   Finding,
   HandleTransaction,
+  Initialize,
   createTransactionEvent,
   ethers,
 } from "forta-agent";
-import agent, {
-  SWAP_EVENT,
-  UNISWAPV3_ADDRESS
-} from "./agent";
 
-describe("high tether transfer agent", () => {
+import agent from "./agent";
+
+import{
+  SWAP_EVENT,
+  ABI
+} from "./agent.config"
+
+describe("Uniswap swap event", () => {
   let handleTransaction: HandleTransaction;
+  let initialize: Initialize;
   const mockTxEvent = createTransactionEvent({} as any);
 
   beforeAll(() => {
+    initialize = agent.initialize;
     handleTransaction = agent.handleTransaction;
+    initialize();
   });
 
   describe("handleTransaction", () => {
-    it("returns empty findings if there are no Tether transfers", async () => {
+    it("returns empty findings if there are no Swap events", async () => {
       mockTxEvent.filterLog = jest.fn().mockReturnValue([]);
 
       const findings = await handleTransaction(mockTxEvent);
@@ -28,47 +35,47 @@ describe("high tether transfer agent", () => {
       expect(findings).toStrictEqual([]);
       expect(mockTxEvent.filterLog).toHaveBeenCalledTimes(1);
       expect(mockTxEvent.filterLog).toHaveBeenCalledWith(
-        ERC20_TRANSFER_EVENT,
-        TETHER_ADDRESS
+        SWAP_EVENT
       );
     });
 
-    it("returns a finding if there is a Tether transfer over 10,000", async () => {
-      const mockTetherTransferEvent = {
+    it("returns a finding if there is a Swap event from UniswapV3", async () => {
+      const mockSwapEvent = {
         args: {
-          from: "0xabc",
-          to: "0xdef",
-          value: ethers.BigNumber.from("20000000000"), //20k with 6 decimals
+          sender: "0xabc",
+          recipient: "0xdef",
+          amount0: ethers.BigNumber.from("200000000"), //20k with 6 decimals,
+          amount1: ethers.BigNumber.from("123400000")
         },
+        address: "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
       };
       mockTxEvent.filterLog = jest
         .fn()
-        .mockReturnValue([mockTetherTransferEvent]);
+        .mockReturnValue([mockSwapEvent]);
 
       const findings = await handleTransaction(mockTxEvent);
 
-      const normalizedValue = mockTetherTransferEvent.args.value.div(
-        10 ** TETHER_DECIMALS
-      );
+      const {sender, recipient, amount0, amount1} = mockSwapEvent.args;
+
       expect(findings).toStrictEqual([
         Finding.fromObject({
-          name: "High Tether Transfer",
-          description: `High amount of USDT transferred: ${normalizedValue}`,
+          name: "Swap event",
+          description: `Swap event from Uniswap on pool: ${mockSwapEvent.address}`,
           alertId: "FORTA-1",
           severity: FindingSeverity.Low,
           type: FindingType.Info,
+          protocol: "UniswapV3",
           metadata: {
-            to: mockTetherTransferEvent.args.to,
-            from: mockTetherTransferEvent.args.from,
-          },
+            sender,
+            recipient,
+            amount0: amount0.toString(),
+            amount1: amount1.toString()
+          }
         }),
       ]);
       expect(mockTxEvent.filterLog).toHaveBeenCalledTimes(1);
-      expect(mockTxEvent.filterLog).toHaveBeenCalledWith(
-        ERC20_TRANSFER_EVENT,
-        TETHER_ADDRESS
-      );
+      expect(mockTxEvent.filterLog).toHaveBeenCalledWith(SWAP_EVENT);
+
     });
   });
 });
- */

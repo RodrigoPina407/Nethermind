@@ -1,13 +1,10 @@
 import {
-  BlockEvent,
   Finding,
-  HandleBlock,
   HandleTransaction,
   TransactionEvent,
   FindingSeverity,
   FindingType,
   ethers,
-  getEthersProvider,
   getJsonRpcUrl
 } from "forta-agent";
 
@@ -29,7 +26,7 @@ const initialize = async () => {
 const isFromUniswap = async (address: string) => {
 
   let isUniswap = false;
-
+ 
   try{
 
     const contractIface = new ethers.Contract(address, ABI, provider);
@@ -42,7 +39,7 @@ const isFromUniswap = async (address: string) => {
 
   } catch(e){
     isUniswap = false;
-    console.log(e);
+    console.error(e);
   }
 
   return isUniswap;
@@ -56,16 +53,17 @@ const handleTransaction: HandleTransaction = async (
 
   // filter the transaction logs for Tether transfer events
   const swapEvents = txEvent.filterLog(SWAP_EVENT);
+  
 
   for(const swapEvent of swapEvents ){
-
+ 
     // extract swap event arguments
     const {sender, recipient, amount0, amount1} = swapEvent.args;
 
     if(findingsCount >= 5) return findings;
     
     if(await isFromUniswap(swapEvent.address)){
-      
+
       findings.push
       (
         Finding.fromObject({
