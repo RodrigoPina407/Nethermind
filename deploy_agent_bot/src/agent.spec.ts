@@ -1,4 +1,4 @@
-/* import {
+import {
   FindingType,
   FindingSeverity,
   Finding,
@@ -7,12 +7,12 @@
   ethers,
 } from "forta-agent";
 import agent, {
-  ERC20_TRANSFER_EVENT,
-  TETHER_ADDRESS,
-  TETHER_DECIMALS,
+  CREATE_FUNCTION_SIG,
+  AGENT_DEPLOYER_ADDRESS,
+
 } from "./agent";
 
-describe("high tether transfer agent", () => {
+describe("forta agent deployed  agent", () => {
   let handleTransaction: HandleTransaction;
   const mockTxEvent = createTransactionEvent({} as any);
 
@@ -21,55 +21,56 @@ describe("high tether transfer agent", () => {
   });
 
   describe("handleTransaction", () => {
-    it("returns empty findings if there are no Tether transfers", async () => {
-      mockTxEvent.filterLog = jest.fn().mockReturnValue([]);
+    it("returns empty findings if no agents are created", async () => {
+      mockTxEvent.filterFunction = jest.fn().mockReturnValue([]);
 
       const findings = await handleTransaction(mockTxEvent);
 
       expect(findings).toStrictEqual([]);
-      expect(mockTxEvent.filterLog).toHaveBeenCalledTimes(1);
-      expect(mockTxEvent.filterLog).toHaveBeenCalledWith(
-        ERC20_TRANSFER_EVENT,
-        TETHER_ADDRESS
+      expect(mockTxEvent.filterFunction).toHaveBeenCalledTimes(1);
+      expect(mockTxEvent.filterFunction).toHaveBeenCalledWith(
+        CREATE_FUNCTION_SIG,
+        AGENT_DEPLOYER_ADDRESS
       );
     });
 
-    it("returns a finding if there is a Tether transfer over 10,000", async () => {
-      const mockTetherTransferEvent = {
+    it("returns a finding if an agent is created", async () => {
+      const mockCreateAgentEvent = {
         args: {
           from: "0xabc",
           to: "0xdef",
-          value: ethers.BigNumber.from("20000000000"), //20k with 6 decimals
+          metadata: "QmVAtFtURYag7pZS7oLT5G7SfXeKpgVP8ZGNHVu7VtZLPr",
+          agentId: "85833389299281977326169868148634497765380089334344114319688312380853379831214"
+
         },
+        address: AGENT_DEPLOYER_ADDRESS
       };
-      mockTxEvent.filterLog = jest
+      mockTxEvent.filterFunction = jest
         .fn()
-        .mockReturnValue([mockTetherTransferEvent]);
+        .mockReturnValue([mockCreateAgentEvent]);
 
       const findings = await handleTransaction(mockTxEvent);
-
-      const normalizedValue = mockTetherTransferEvent.args.value.div(
-        10 ** TETHER_DECIMALS
-      );
+     
+      const {metadata, agentId} = mockCreateAgentEvent.args;
+      
       expect(findings).toStrictEqual([
         Finding.fromObject({
-          name: "High Tether Transfer",
-          description: `High amount of USDT transferred: ${normalizedValue}`,
+          name: "Forta Agent Deployment",
+          description: `Forta Agent deployed on: ${mockCreateAgentEvent.address}`,
           alertId: "FORTA-1",
           severity: FindingSeverity.Low,
           type: FindingType.Info,
           metadata: {
-            to: mockTetherTransferEvent.args.to,
-            from: mockTetherTransferEvent.args.from,
+            metadata,
+            agentId: agentId.toString()
           },
         }),
       ]);
-      expect(mockTxEvent.filterLog).toHaveBeenCalledTimes(1);
-      expect(mockTxEvent.filterLog).toHaveBeenCalledWith(
-        ERC20_TRANSFER_EVENT,
-        TETHER_ADDRESS
+      expect(mockTxEvent.filterFunction).toHaveBeenCalledTimes(1);
+      expect(mockTxEvent.filterFunction).toHaveBeenCalledWith(
+        CREATE_FUNCTION_SIG,
+        AGENT_DEPLOYER_ADDRESS
       );
     });
   });
 });
- */
