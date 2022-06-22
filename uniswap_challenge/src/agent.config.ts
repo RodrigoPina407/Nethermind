@@ -16,3 +16,8 @@ export const FACTORY_ABI =
     "function getPool(address,address,uint24) external view returns(address)"
 ]
 
+export const TOKEN_ABI =
+[
+    "function name() public view returns(string)"
+]
+

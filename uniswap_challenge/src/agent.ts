@@ -12,11 +12,15 @@ import {
   FACTORY_ADDRESS,
   SWAP_EVENT,
   ABI,
-  FACTORY_ABI
+  FACTORY_ABI,
+  TOKEN_ABI
 } from "./agent.config"
 
 let findingsCount = 0;
 let provider:ethers.providers.JsonRpcProvider;
+
+let token0_name: string;
+let token1_name: string;
 
 const initialize = async () => {
 
@@ -36,6 +40,12 @@ const isFromUniswap = async (address: string) => {
     const token0 = await contractIface.token0();
     const token1 = await contractIface.token1();
     const fee = await contractIface.fee();
+
+    const token0Iface = new ethers.Contract(token0, TOKEN_ABI, provider);
+    const token1Iface = new ethers.Contract(token1, TOKEN_ABI, provider);
+
+    token0_name = await token0Iface.name();
+    token1_name = await token1Iface.name();
 
     let poolAddress = await factoryIface.getPool(token0, token1, fee);
     let factory = await contractIface.factory();
@@ -83,7 +93,9 @@ const handleTransaction: HandleTransaction = async (
           metadata: {
             sender,
             recipient,
+            token0: token0_name,
             amount0: amount0.toString(),
+            token1: token1_name,
             amount1: amount1.toString()
           },
         })
