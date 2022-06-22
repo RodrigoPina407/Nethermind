@@ -5,6 +5,14 @@ export const SWAP_EVENT = "event Swap(address indexed sender, address indexed re
 
 export const ABI =
 [
-    "function factory() external view returns (address)"
+    "function factory() external view returns (address)",
+    "function token0() external view returns (address)",
+    "function token1() external view returns (address)",
+    "function fee() external view returns(uint24)"
+]
+
+export const FACTORY_ABI = 
+[
+    "function getPool(address,address,uint24) external view returns(address)"
 ]
 

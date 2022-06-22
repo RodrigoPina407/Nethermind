@@ -11,7 +11,8 @@ import {
 import {
   FACTORY_ADDRESS,
   SWAP_EVENT,
-  ABI
+  ABI,
+  FACTORY_ABI
 } from "./agent.config"
 
 let findingsCount = 0;
@@ -30,11 +31,17 @@ const isFromUniswap = async (address: string) => {
   try{
 
     const contractIface = new ethers.Contract(address, ABI, provider);
+    const factoryIface = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
 
+    const token0 = await contractIface.token0();
+    const token1 = await contractIface.token1();
+    const fee = await contractIface.fee();
+
+    let poolAddress = await factoryIface.getPool(token0, token1, fee);
     let factory = await contractIface.factory();
 
     //check if the result form factory() is equal to the address of UniswapV3Factory contract
-    if(factory === FACTORY_ADDRESS)
+    if(factory.toLowerCase() === FACTORY_ADDRESS.toLowerCase() && address.toLowerCase() === poolAddress.toLowerCase())
       isUniswap = true;
 
   } catch(e){
