@@ -39,12 +39,16 @@ describe("Uniswap swap event", () => {
       );
     });
 
+    jest.setTimeout(10000);
     it("returns a finding if there is a Swap event from UniswapV3", async () => {
+      
       const mockSwapEvent = {
         args: {
           sender: "0xabc",
           recipient: "0xdef",
-          amount0: ethers.BigNumber.from("200000000"), //20k with 6 decimals,
+          token0: "USD Coin",
+          amount0: ethers.BigNumber.from("200000000"),
+          token1: "Wrapped Ether",
           amount1: ethers.BigNumber.from("123400000")
         },
         address: "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
@@ -55,7 +59,7 @@ describe("Uniswap swap event", () => {
 
       const findings = await handleTransaction(mockTxEvent);
 
-      const {sender, recipient, amount0, amount1} = mockSwapEvent.args;
+      const {sender, recipient, amount0, amount1, token0, token1} = mockSwapEvent.args;
 
       expect(findings).toStrictEqual([
         Finding.fromObject({
@@ -68,7 +72,9 @@ describe("Uniswap swap event", () => {
           metadata: {
             sender,
             recipient,
+            token0,
             amount0: amount0.toString(),
+            token1,
             amount1: amount1.toString()
           }
         }),
