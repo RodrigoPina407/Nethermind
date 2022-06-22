@@ -48,10 +48,9 @@ const isFromUniswap = async (address: string) => {
     token1_name = await token1Iface.name();
 
     let poolAddress = await factoryIface.getPool(token0, token1, fee);
-    let factory = await contractIface.factory();
 
-    //check if the result form factory() is equal to the address of UniswapV3Factory contract
-    if(factory.toLowerCase() === FACTORY_ADDRESS.toLowerCase() && address.toLowerCase() === poolAddress.toLowerCase())
+    //check if the pool address exists in the factory contract getPool mapping
+    if(address.toLowerCase() === poolAddress.toLowerCase())
       isUniswap = true;
 
   } catch(e){
@@ -73,7 +72,7 @@ const handleTransaction: HandleTransaction = async (
   
 
   for(const swapEvent of swapEvents ){
- 
+    
     // extract swap event arguments
     const {sender, recipient, amount0, amount1} = swapEvent.args;
 
