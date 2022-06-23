@@ -13,7 +13,8 @@ import {
   SWAP_EVENT,
   ABI,
   FACTORY_ABI,
-  TOKEN_ABI
+  TOKEN_ABI,
+  POOL_INITCODE_HASH
 } from "./agent.config"
 
 let findingsCount = 0;
@@ -28,6 +29,20 @@ const initialize = async () => {
 
 }
 
+const calculateCreate2Address = (token0: string, token1: string, fee: number) => {
+
+  const abiCoder = new ethers.utils.AbiCoder();
+
+  let encoding = abiCoder.encode(["address", "address", "uint24"], [token0, token1, fee]);
+
+  let salt = ethers.utils.keccak256(encoding);
+
+  let address = ethers.utils.getCreate2Address(FACTORY_ADDRESS, salt, POOL_INITCODE_HASH);
+
+  return address;
+
+}
+
 const isFromUniswap = async (address: string) => {
 
   let isUniswap = false;
@@ -37,17 +52,20 @@ const isFromUniswap = async (address: string) => {
     const contractIface = new ethers.Contract(address, ABI, provider);
     const factoryIface = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
 
-    const token0 = await contractIface.token0();
-    const token1 = await contractIface.token1();
-    const fee = await contractIface.fee();
+    let token0 = await contractIface.token0();
+    let token1 = await contractIface.token1();
+    let fee = await contractIface.fee();
 
-    const token0Iface = new ethers.Contract(token0, TOKEN_ABI, provider);
-    const token1Iface = new ethers.Contract(token1, TOKEN_ABI, provider);
+    let token0Iface = new ethers.Contract(token0, TOKEN_ABI, provider);
+    let token1Iface = new ethers.Contract(token1, TOKEN_ABI, provider);
 
     token0_name = await token0Iface.name();
     token1_name = await token1Iface.name();
 
-    let poolAddress = await factoryIface.getPool(token0, token1, fee);
+    //calculate Create2 address
+    let poolAddress = calculateCreate2Address(token0, token1, fee);
+
+    console.log(poolAddress);
 
     //check if the pool address exists in the factory contract getPool mapping
     if(address.toLowerCase() === poolAddress.toLowerCase())
