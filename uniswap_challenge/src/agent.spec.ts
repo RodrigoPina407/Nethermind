@@ -39,7 +39,6 @@ describe("Uniswap swap event", () => {
       );
     });
 
-    jest.setTimeout(10000);
     it("returns a finding if there is a Swap event from UniswapV3", async () => {
       
       const mockSwapEvent = {
