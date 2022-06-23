@@ -65,8 +65,6 @@ const isFromUniswap = async (address: string) => {
     //calculate Create2 address
     let poolAddress = calculateCreate2Address(token0, token1, fee);
 
-    console.log(poolAddress);
-
     //check if the pool address exists in the factory contract getPool mapping
     if(address.toLowerCase() === poolAddress.toLowerCase())
       isUniswap = true;
